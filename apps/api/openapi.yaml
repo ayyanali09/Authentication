@@ -1,0 +1,175 @@
+openapi: 3.1.0
+info:
+  title: DURON API
+  version: 1.0.0
+  description: REST API for projects, blog posts, testimonials, inquiries, finance entries, analytics, and admin authentication.
+servers:
+  - url: http://localhost:4000/api/v1
+paths:
+  /auth/login:
+    post:
+      summary: Login as an administrator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+      responses:
+        "200":
+          description: JWT and user payload
+  /projects:
+    get:
+      summary: List published projects
+      responses:
+        "200":
+          description: Published project collection
+    post:
+      security:
+        - bearerAuth: []
+      summary: Create a project
+      responses:
+        "201":
+          description: Project created
+  /projects/{slug}:
+    get:
+      summary: Get a published project by slug
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Project
+  /blog:
+    get:
+      summary: List published blog posts
+      responses:
+        "200":
+          description: Published blog collection
+    post:
+      security:
+        - bearerAuth: []
+      summary: Create a blog post
+      responses:
+        "201":
+          description: Blog post created
+  /testimonials:
+    get:
+      summary: List featured testimonials
+      responses:
+        "200":
+          description: Featured testimonials
+    post:
+      security:
+        - bearerAuth: []
+      summary: Create a testimonial
+      responses:
+        "201":
+          description: Testimonial created
+  /contact:
+    post:
+      summary: Submit a contact inquiry
+      responses:
+        "201":
+          description: Message received
+    get:
+      security:
+        - bearerAuth: []
+      summary: List contact inquiries
+      responses:
+        "200":
+          description: Contact inquiry collection
+  /contact/{id}:
+    patch:
+      security:
+        - bearerAuth: []
+      summary: Update contact inquiry status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Contact inquiry updated
+    delete:
+      security:
+        - bearerAuth: []
+      summary: Delete contact inquiry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Contact inquiry deleted
+  /finance:
+    get:
+      security:
+        - bearerAuth: []
+      summary: List finance entries
+      responses:
+        "200":
+          description: Finance entry collection
+    post:
+      security:
+        - bearerAuth: []
+      summary: Create a finance entry
+      responses:
+        "201":
+          description: Finance entry created
+  /finance/{id}:
+    patch:
+      security:
+        - bearerAuth: []
+      summary: Update a finance entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Finance entry updated
+    delete:
+      security:
+        - bearerAuth: []
+      summary: Delete a finance entry
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Finance entry deleted
+  /analytics/overview:
+    get:
+      security:
+        - bearerAuth: []
+      summary: Get admin dashboard analytics
+      responses:
+        "200":
+          description: Dashboard metrics
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

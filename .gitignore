@@ -1,0 +1,30 @@
+node_modules
+.next
+dist
+coverage
+.turbo
+.env
+.env.local
+.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+Dockerfile.local
+tmp
+.local-data
+*.tsbuildinfo
+
+# Local preview and QA artifacts
+.chrome-*
+.codex-*.log
+*-check.png
+*-check.jpg
+portfolio-mobile-*.png
+portfolio-crops-check.jpg
+home-*.png
+footer-*.png
+team-check.png
+
+# Old/static local export kept outside the deployable monorepo
+link/
