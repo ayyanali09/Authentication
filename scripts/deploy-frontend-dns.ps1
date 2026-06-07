@@ -1,5 +1,5 @@
 param(
-  [string]$Project = $(if ($env:VERCEL_PROJECT) { $env:VERCEL_PROJECT } else { "duron-media" }),
+  [string]$Project = $(if ($env:VERCEL_PROJECT) { $env:VERCEL_PROJECT } else { "site-1" }),
   [string]$Team = $env:VERCEL_TEAM,
   [string]$Domain = "duron.media",
   [string]$WwwCname = $(if ($env:VERCEL_WWW_CNAME) { $env:VERCEL_WWW_CNAME } else { "cname.vercel-dns-0.com" }),
