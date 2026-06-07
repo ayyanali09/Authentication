@@ -7,7 +7,7 @@ import {
 
 export const site = {
   name: "DURON",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://duron.media",
   description:
     "DURON is a digital media and development agency building websites, mobile app experiences, UI/UX design systems, dashboards, automations, and business-ready digital solutions.",
   email: "hello@duron.media",

@@ -1,6 +1,6 @@
 import type { ContactPayload } from "@vantanova/shared";
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000/api/v1").replace(
+const API_BASE = (process.env.NEXT_PUBLIC_API_URL ?? "/api/v1").replace(
   /\/$/,
   ""
 );
