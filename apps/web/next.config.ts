@@ -19,12 +19,14 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"]
   },
+  
+  // Yeh humne backend ka direct dynamic rewrite proxy add kar diya hai
   async rewrites() {
     return [
       {
-        source: "/api/v1/:path*",
-        destination: "https://vercel.app*"
-      }
+        source: '/api/v1/:path*',
+        destination: 'https://vercel.app*',
+      },
     ];
   }
 };
