@@ -6,6 +6,11 @@
       "use": "@vercel/node"
     }
   ],
+  "functions": {
+    "apps/api/src/app.ts": {
+      "runtime": "nodejs22.x"
+    }
+  },
   "routes": [
     {
       "src": "/api/v1/(.*)",
