@@ -7,7 +7,15 @@ export const notFoundHandler: RequestHandler = (req, _res, next) => {
   next(new HttpError(404, `Route not found: ${req.method} ${req.originalUrl}`));
 };
 
-export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (error, req, res, _next) => {
+  console.error("=== ERROR HANDLER ===", {
+    method: req.method,
+    path: req.originalUrl,
+    errorType: error.constructor.name,
+    message: error instanceof Error ? error.message : String(error),
+    stack: error instanceof Error ? error.stack : undefined
+  });
+
   if (error instanceof ZodError) {
     return res.status(400).json({
       success: false,
