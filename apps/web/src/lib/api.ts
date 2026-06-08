@@ -106,11 +106,41 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}) {
   return payload.data;
 }
 
-export function submitContact(payload: ContactPayload) {
-  return apiFetch<{ id: string; status: string }>("/contact", {
-    method: "POST",
-    body: JSON.stringify(payload)
-  });
+export async function submitContact(payload: ContactPayload) {
+  const BACKEND_URL = "https://vercel.app";
+  const headers = new Headers();
+  headers.set("Content-Type", "application/json");
+
+  try {
+    const response = await fetch(`${BACKEND_URL}/api/v1/contact`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+      cache: "no-store"
+    });
+
+    const contentType = response.headers.get("content-type") ?? "";
+    const apiResponse = contentType.includes("application/json")
+      ? ((await response.json()) as ApiResponse<{ id: string; status: string }>)
+      : ({
+          success: false,
+          message: response.ok ? "Invalid server response" : `Server error (${response.status})`,
+          data: null
+        } as ApiResponse<{ id: string; status: string }>);
+
+    if (!response.ok || !apiResponse.success) {
+      const detail = apiResponse.errors?.map((error) => error.message).join(", ");
+      throw new Error(detail || apiResponse.message || "Request failed");
+    }
+
+    return apiResponse.data;
+  } catch (error) {
+    throw new Error(
+      error instanceof Error
+        ? error.message
+        : "Could not connect to the server. Please try again shortly."
+    );
+  }
 }
 
 export function loginAdmin(payload: { email: string; password: string }) {
