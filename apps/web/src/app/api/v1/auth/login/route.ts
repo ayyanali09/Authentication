@@ -29,6 +29,14 @@ export async function POST(request: NextRequest) {
     return json({ success: false, message: "Email and password are required.", data: null }, 400);
   }
 
+  if (!process.env.MONGO_URI) {
+    return unavailable("MONGO_URI is not configured on the backend.");
+  }
+
+  if (!process.env.JWT_SECRET) {
+    return unavailable("JWT_SECRET is not configured on the backend.");
+  }
+
   try {
     await connectMongo();
     await ensureInitialAdmin();

@@ -156,6 +156,10 @@ export async function POST(request: NextRequest) {
     return json(forwarded, 201);
   }
 
+  if (!process.env.MONGO_URI) {
+    return unavailable("MONGO_URI is not configured on the backend.");
+  }
+
   try {
     await connectMongo();
 
@@ -176,7 +180,8 @@ export async function POST(request: NextRequest) {
       },
       201
     );
-  } catch {
+  } catch (error) {
+    console.error("Contact route failed:", error);
     return unavailable("Inquiry inbox is not configured yet. Please try again shortly.");
   }
 }
