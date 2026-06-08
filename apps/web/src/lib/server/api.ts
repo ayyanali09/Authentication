@@ -248,6 +248,10 @@ export async function requireUser(request: NextRequest) {
 }
 
 export async function ensureInitialAdmin() {
+  if (process.env.BOOTSTRAP_ADMIN_ON_START === "false") {
+    return;
+  }
+
   const existingUsers = await UserModel.estimatedDocumentCount();
 
   if (existingUsers > 0) {
@@ -287,4 +291,3 @@ export function cleanOptional(value: unknown) {
   const trimmed = value.trim();
   return trimmed ? trimmed : undefined;
 }
-
