@@ -107,7 +107,7 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}) {
 }
 
 export async function submitContact(payload: ContactPayload) {
-  const BACKEND_URL = "https://vercel.app";
+  const BACKEND_URL = "https://authentication-api-fawn.vercel.app";
   const endpoint = `${BACKEND_URL}/api/v1/contact`;
 
   const headers = new Headers();
