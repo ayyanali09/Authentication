@@ -182,8 +182,31 @@ export async function POST(request: NextRequest) {
       201
     );
   } catch (error) {
-    console.error("Contact route failed:", error);
-    return unavailable(setupErrorMessage(error, "Inquiry inbox is not configured yet."));
+    console.error("Contact route error:", error);
+    
+    // Attempt to save directly without the inbox configuration check
+    try {
+      const message = await ContactMessageModel.create({
+        ...parsed.payload,
+        ipAddress: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim(),
+        userAgent: request.headers.get("user-agent") ?? undefined
+      });
+
+      return json(
+        {
+          success: true,
+          message: "Message received",
+          data: {
+            id: message.id,
+            status: message.status
+          }
+        },
+        201
+      );
+    } catch (fallbackError) {
+      console.error("Fallback contact save failed:", fallbackError);
+      return unavailable("Failed to save contact message. Please try again later.");
+    }
   }
 }
 
