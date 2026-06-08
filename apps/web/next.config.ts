@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
       beforeFiles: [
         {
           source: "/api/v1/:path*",
-          destination: "https://api.duron.media/api/v1/:path*"
+          destination: "https://vercel.app*/api/v1/:path*"
         }
       ]
     };
