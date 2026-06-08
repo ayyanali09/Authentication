@@ -30,6 +30,27 @@ function Import-EnvFile {
   }
 }
 
+function Read-EnvFileValue {
+  param(
+    [string]$Path,
+    [string]$Name
+  )
+
+  if (!(Test-Path -LiteralPath $Path)) {
+    return $null
+  }
+
+  $line = Get-Content -LiteralPath $Path |
+    Where-Object { $_ -match "^\s*$([regex]::Escape($Name))\s*=" } |
+    Select-Object -First 1
+
+  if (!$line) {
+    return $null
+  }
+
+  return ($line -split "=", 2)[1].Trim().Trim('"').Trim("'")
+}
+
 function Invoke-Vercel {
   param([string[]]$Args)
 
@@ -46,8 +67,12 @@ function Invoke-Vercel {
 
 Import-EnvFile -Path ".env.deploy.local"
 
+if ($UseSavedVercelLogin) {
+  Remove-Item Env:VERCEL_TOKEN -ErrorAction SilentlyContinue
+}
+
 $siteUrl = "https://$Domain"
-$apiUrl = "https://api.$Domain/api/v1"
+$apiUrl = "/api/v1"
 $webDir = "apps/web"
 $vercelScopeArgs = @()
 
@@ -64,6 +89,27 @@ Invoke-Vercel (@("link", "--cwd", $webDir, "--yes", "--project", $Project) + $ve
 Write-Host "Setting Vercel production environment variables"
 Invoke-Vercel @("env", "add", "NEXT_PUBLIC_SITE_URL", "production", "--value", $siteUrl, "--yes", "--force", "--no-sensitive", "--cwd", $webDir)
 Invoke-Vercel @("env", "add", "NEXT_PUBLIC_API_URL", "production", "--value", $apiUrl, "--yes", "--force", "--no-sensitive", "--cwd", $webDir)
+
+$apiProdEnv = "apps/api/.env.production.local"
+$apiLocalEnv = "apps/api/.env"
+$mongoUri = Read-EnvFileValue -Path $apiProdEnv -Name "MONGO_URI"
+$jwtSecret = Read-EnvFileValue -Path $apiProdEnv -Name "JWT_SECRET"
+$jwtExpiresIn = Read-EnvFileValue -Path $apiProdEnv -Name "JWT_EXPIRES_IN"
+$seedAdminName = Read-EnvFileValue -Path $apiLocalEnv -Name "SEED_ADMIN_NAME"
+$seedAdminEmail = Read-EnvFileValue -Path $apiLocalEnv -Name "SEED_ADMIN_EMAIL"
+$seedAdminPassword = Read-EnvFileValue -Path $apiLocalEnv -Name "SEED_ADMIN_PASSWORD"
+
+if (!$mongoUri -or !$jwtSecret -or !$seedAdminEmail -or !$seedAdminPassword) {
+  throw "Missing required local production env values. Check apps/api/.env.production.local and apps/api/.env."
+}
+
+Invoke-Vercel @("env", "add", "MONGO_URI", "production", "--value", $mongoUri, "--yes", "--force", "--cwd", $webDir)
+Invoke-Vercel @("env", "add", "JWT_SECRET", "production", "--value", $jwtSecret, "--yes", "--force", "--cwd", $webDir)
+Invoke-Vercel @("env", "add", "JWT_EXPIRES_IN", "production", "--value", $(if ($jwtExpiresIn) { $jwtExpiresIn } else { "7d" }), "--yes", "--force", "--no-sensitive", "--cwd", $webDir)
+Invoke-Vercel @("env", "add", "SEED_ADMIN_NAME", "production", "--value", $(if ($seedAdminName) { $seedAdminName } else { "DURON Admin" }), "--yes", "--force", "--no-sensitive", "--cwd", $webDir)
+Invoke-Vercel @("env", "add", "SEED_ADMIN_EMAIL", "production", "--value", $seedAdminEmail, "--yes", "--force", "--no-sensitive", "--cwd", $webDir)
+Invoke-Vercel @("env", "add", "SEED_ADMIN_PASSWORD", "production", "--value", $seedAdminPassword, "--yes", "--force", "--cwd", $webDir)
+Invoke-Vercel @("env", "add", "BOOTSTRAP_ADMIN_ON_START", "production", "--value", "true", "--yes", "--force", "--no-sensitive", "--cwd", $webDir)
 
 Write-Host "Building Vercel output locally"
 Invoke-Vercel @("build", "--prod", "--cwd", $webDir, "--project", $Project)
