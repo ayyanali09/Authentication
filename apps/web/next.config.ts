@@ -18,6 +18,16 @@ const nextConfig: NextConfig = {
     : {}),
   images: {
     formats: ["image/avif", "image/webp"]
+  },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: "/api/v1/:path*",
+          destination: "https://api.duron.media/api/v1/:path*"
+        }
+      ]
+    };
   }
 };
 
