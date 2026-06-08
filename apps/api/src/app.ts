@@ -1,7 +1,10 @@
+import dns from "node:dns/promises";
 import express from "express";
 import { apiRouter } from "./routes/index.js";
 import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import { applySecurity } from "./middleware/security.js";
+
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 export function createApp() {
   const app = express();

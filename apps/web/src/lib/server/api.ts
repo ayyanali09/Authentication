@@ -1,8 +1,11 @@
+import dns from "node:dns/promises";
 import { SERVICES } from "@vantanova/shared";
 import bcrypt from "bcryptjs";
 import jwt, { type SignOptions } from "jsonwebtoken";
 import mongoose, { Schema, type Model } from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
+
+dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 export type ContactStatus = "new" | "read" | "archived";
 export type UserRole = "admin" | "editor";
