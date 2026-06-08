@@ -122,7 +122,8 @@ export async function submitContact(payload: ContactPayload) {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
-      cache: "no-store"
+      cache: "no-store",
+      credentials: "omit"
     });
 
     console.log("📥 Backend response status:", response.status);
