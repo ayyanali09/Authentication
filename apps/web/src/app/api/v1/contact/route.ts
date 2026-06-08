@@ -204,7 +204,11 @@ export async function POST(request: NextRequest) {
         201
       );
     } catch (fallbackError) {
-      console.error("Fallback contact save failed:", fallbackError);
+      console.error("DATABASE_SAVE_ERROR:", {
+        error: fallbackError instanceof Error ? fallbackError.message : String(fallbackError),
+        stack: fallbackError instanceof Error ? fallbackError.stack : undefined,
+        payload: parsed.payload
+      });
       return unavailable("Failed to save contact message. Please try again later.");
     }
   }

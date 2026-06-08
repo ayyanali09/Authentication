@@ -22,7 +22,7 @@ const contactMessageSchema = new Schema<ContactMessageDocument>(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, lowercase: true, trim: true, index: true },
     company: { type: String, trim: true },
-    service: { type: String, enum: SERVICES, required: true },
+    service: { type: String, enum: SERVICES, trim: true },
     budget: { type: String, trim: true, maxlength: 80 },
     message: { type: String, required: true, trim: true },
     status: {
