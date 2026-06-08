@@ -4,6 +4,7 @@ import {
   connectMongo,
   ensureInitialAdmin,
   json,
+  setupErrorMessage,
   signAdminToken,
   unavailable,
   UserModel,
@@ -57,8 +58,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Admin login setup failed:", error);
-    return unavailable(
-      "Admin login is not configured yet. Check MONGO_URI, JWT_SECRET, and BOOTSTRAP_ADMIN_ON_START in your backend environment."
-    );
+    return unavailable(setupErrorMessage(error, "Admin login is not configured yet."));
   }
 }

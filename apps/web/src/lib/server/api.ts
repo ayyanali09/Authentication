@@ -158,6 +158,22 @@ export function unavailable(message = "Production database is not configured yet
   return json({ success: false, message, data: null }, 503);
 }
 
+export function setupErrorMessage(error: unknown, fallback = "Production database is not configured yet.") {
+  if (error instanceof Error) {
+    if (error.message.includes("MONGO_URI")) {
+      return "Configuration missing: MONGO_URI.";
+    }
+
+    if (error.message.includes("JWT_SECRET")) {
+      return "Configuration missing: JWT_SECRET.";
+    }
+
+    return `${fallback} (${error.name})`;
+  }
+
+  return fallback;
+}
+
 export async function connectMongo() {
   const uri = process.env.MONGO_URI;
 

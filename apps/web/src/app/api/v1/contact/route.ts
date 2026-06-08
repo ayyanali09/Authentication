@@ -7,6 +7,7 @@ import {
   json,
   normalizeDocumentId,
   requireUser,
+  setupErrorMessage,
   unavailable
 } from "@/lib/server/api";
 
@@ -182,7 +183,7 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Contact route failed:", error);
-    return unavailable("Inquiry inbox is not configured yet. Please try again shortly.");
+    return unavailable(setupErrorMessage(error, "Inquiry inbox is not configured yet."));
   }
 }
 
