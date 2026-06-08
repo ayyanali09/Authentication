@@ -1,72 +1,16 @@
 import { SERVICES, type ContactPayload } from "@vantanova/shared";
-import mongoose, { Schema } from "mongoose";
 import { NextRequest, NextResponse } from "next/server";
+import {
+  cleanOptional,
+  connectMongo,
+  ContactMessageModel,
+  json,
+  normalizeDocumentId,
+  requireUser,
+  unavailable
+} from "@/lib/server/api";
 
 export const runtime = "nodejs";
-
-type ContactStatus = "new" | "read" | "archived";
-
-type ContactMessageDocument = {
-  name: string;
-  email: string;
-  company?: string;
-  service: string;
-  budget?: string;
-  message: string;
-  status: ContactStatus;
-  ipAddress?: string;
-  userAgent?: string;
-  createdAt: Date;
-  updatedAt: Date;
-};
-
-type ApiResponse<T> = {
-  success: boolean;
-  message: string;
-  data: T;
-  errors?: Array<{ path: string; message: string }>;
-};
-
-let mongoConnection: Promise<typeof mongoose> | null = null;
-
-const contactMessageSchema =
-  mongoose.models.ContactMessage?.schema ??
-  new Schema<ContactMessageDocument>(
-    {
-      name: { type: String, required: true, trim: true },
-      email: { type: String, required: true, lowercase: true, trim: true, index: true },
-      company: { type: String, trim: true },
-      service: { type: String, enum: SERVICES, required: true },
-      budget: { type: String, trim: true, maxlength: 80 },
-      message: { type: String, required: true, trim: true },
-      status: {
-        type: String,
-        enum: ["new", "read", "archived"],
-        default: "new",
-        index: true
-      },
-      ipAddress: { type: String },
-      userAgent: { type: String }
-    },
-    { timestamps: true }
-  );
-
-const ContactMessage =
-  (mongoose.models.ContactMessage as mongoose.Model<ContactMessageDocument> | undefined) ??
-  mongoose.model<ContactMessageDocument>("ContactMessage", contactMessageSchema);
-
-function json<T>(payload: ApiResponse<T>, status = 200) {
-  return NextResponse.json(payload, { status });
-}
-
-function cleanOptional(value: unknown) {
-  if (typeof value !== "string") {
-    return undefined;
-  }
-
-  const trimmed = value.trim();
-  return trimmed ? trimmed : undefined;
-}
 
 function parseContactPayload(body: unknown) {
   const errors: Array<{ path: string; message: string }> = [];
@@ -156,28 +100,10 @@ async function forwardToBackend(payload: ContactPayload) {
       return null;
     }
 
-    return (await response.json()) as ApiResponse<{ id: string; status: string }>;
+    return await response.json();
   } catch {
     return null;
   }
-}
-
-async function connectMongo() {
-  const uri = process.env.MONGO_URI;
-
-  if (!uri) {
-    throw new Error("MONGO_URI is not configured.");
-  }
-
-  if (mongoose.connection.readyState === 1) {
-    return;
-  }
-
-  mongoConnection ??= mongoose.connect(uri, {
-    bufferCommands: false
-  });
-
-  await mongoConnection;
 }
 
 export async function OPTIONS() {
@@ -216,7 +142,7 @@ export async function POST(request: NextRequest) {
   try {
     await connectMongo();
 
-    const message = await ContactMessage.create({
+    const message = await ContactMessageModel.create({
       ...parsed.payload,
       ipAddress: request.headers.get("x-forwarded-for")?.split(",")[0]?.trim(),
       userAgent: request.headers.get("user-agent") ?? undefined
@@ -234,13 +160,21 @@ export async function POST(request: NextRequest) {
       201
     );
   } catch {
-    return json(
-      {
-        success: false,
-        message: "Inquiry inbox is not configured yet. Please try again shortly.",
-        data: null
-      },
-      503
-    );
+    return unavailable("Inquiry inbox is not configured yet. Please try again shortly.");
+  }
+}
+
+export async function GET(request: NextRequest) {
+  const auth = await requireUser(request);
+
+  if ("response" in auth) {
+    return auth.response;
+  }
+
+  try {
+    const messages = await ContactMessageModel.find().sort({ createdAt: -1 }).lean();
+    return json({ success: true, message: "OK", data: messages.map(normalizeDocumentId) });
+  } catch {
+    return unavailable();
   }
 }
