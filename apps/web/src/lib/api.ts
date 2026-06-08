@@ -108,37 +108,66 @@ export async function apiFetch<T>(path: string, options: RequestOptions = {}) {
 
 export async function submitContact(payload: ContactPayload) {
   const BACKEND_URL = "https://vercel.app";
+  const endpoint = `${BACKEND_URL}/api/v1/contact`;
+
   const headers = new Headers();
   headers.set("Content-Type", "application/json");
+  headers.set("Accept", "application/json");
+  headers.set("X-Requested-With", "XMLHttpRequest");
+
+  console.log("📤 Submitting contact form to:", endpoint);
 
   try {
-    const response = await fetch(`${BACKEND_URL}/api/v1/contact`, {
+    const response = await fetch(endpoint, {
       method: "POST",
       headers,
       body: JSON.stringify(payload),
-      cache: "no-store"
+      cache: "no-store",
+      credentials: "include"
     });
 
-    const contentType = response.headers.get("content-type") ?? "";
-    const apiResponse = contentType.includes("application/json")
-      ? ((await response.json()) as ApiResponse<{ id: string; status: string }>)
-      : ({
-          success: false,
-          message: response.ok ? "Invalid server response" : `Server error (${response.status})`,
-          data: null
-        } as ApiResponse<{ id: string; status: string }>);
+    console.log("📥 Backend response status:", response.status);
 
-    if (!response.ok || !apiResponse.success) {
-      const detail = apiResponse.errors?.map((error) => error.message).join(", ");
-      throw new Error(detail || apiResponse.message || "Request failed");
+    const contentType = response.headers.get("content-type") ?? "";
+    let apiResponse: ApiResponse<{ id: string; status: string }>;
+
+    if (contentType.includes("application/json")) {
+      try {
+        apiResponse = await response.json();
+      } catch (parseError) {
+        console.error("Failed to parse JSON response:", parseError);
+        throw new Error(`Invalid JSON response from server (${response.status})`);
+      }
+    } else {
+      console.error("Non-JSON response from backend:", contentType);
+      apiResponse = {
+        success: false,
+        message: response.ok ? "Invalid server response format" : `Server error (${response.status})`,
+        data: null as any,
+        errors: []
+      };
     }
 
+    if (!response.ok) {
+      console.error("Backend error response:", apiResponse);
+      const detail = apiResponse.errors?.map((error) => error.message).join(", ");
+      throw new Error(detail || apiResponse.message || `Server error (${response.status})`);
+    }
+
+    if (!apiResponse.success) {
+      console.error("Backend returned success:false:", apiResponse);
+      throw new Error(apiResponse.message || "Server returned an error");
+    }
+
+    console.log("✅ Contact submitted successfully:", apiResponse.data);
     return apiResponse.data;
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("❌ Contact submission failed:", errorMessage);
     throw new Error(
-      error instanceof Error
-        ? error.message
-        : "Could not connect to the server. Please try again shortly."
+      errorMessage.includes("fetch") || errorMessage.includes("network")
+        ? "Could not connect to the server. Please check your connection and try again."
+        : errorMessage
     );
   }
 }
