@@ -23,7 +23,7 @@ const nextConfig: NextConfig = {
     return [
       {
         source: "/api/v1/:path*",
-        destination: "https://vercel.app/:path*"
+        destination: "https://vercel.app*"
       }
     ];
   }
