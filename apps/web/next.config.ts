@@ -20,14 +20,12 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"]
   },
   async rewrites() {
-    return {
-      beforeFiles: [
-        {
-          source: "/api/v1/:path*",
-          destination: "https://vercel.app*/api/v1/:path*"
-        }
-      ]
-    };
+    return [
+      {
+        source: "/api/v1/:path*",
+        destination: "https://vercel.app/:path*"
+      }
+    ];
   }
 };
 
