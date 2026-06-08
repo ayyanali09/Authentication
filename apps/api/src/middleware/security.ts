@@ -13,9 +13,21 @@ export function applySecurity(app: Express) {
   app.use(cookieParser());
   
   // Humne origin ko '*' kar diya hai taake har domain allow ho jaye
+  const allowedOrigins = [
+    "https://duron.media",
+    "https://duron.media",
+    "https://vercel.app"
+  ];
+
   app.use(
     cors({
-      origin: "*",
+      origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
       credentials: true,
       methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"]
