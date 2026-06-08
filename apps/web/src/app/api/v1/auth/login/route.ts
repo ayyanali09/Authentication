@@ -47,7 +47,10 @@ export async function POST(request: NextRequest) {
         user: userPayload(user)
       }
     });
-  } catch {
-    return unavailable("Admin login is not configured yet.");
+  } catch (error) {
+    console.error("Admin login setup failed:", error);
+    return unavailable(
+      "Admin login is not not configured yet. Check MONGO_URI, JWT_SECRET, and BOOTSTRAP_ADMIN_ON_START in your backend environment."
+    );
   }
 }

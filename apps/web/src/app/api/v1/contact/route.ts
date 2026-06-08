@@ -59,28 +59,45 @@ function parseContactPayload(body: unknown) {
   };
 }
 
-function getForwardApiBase() {
+function getForwardApiBase(request: NextRequest) {
   const value = process.env.CONTACT_FORWARD_API_URL ?? process.env.NEXT_PUBLIC_API_URL;
 
   if (!value) {
+    // In development, default to the local Express API so the frontend can forward
+    if (process.env.NODE_ENV !== "production") {
+      return "http://localhost:4000/api/v1";
+    }
+
     return null;
   }
 
-  const base = value.replace(/\/$/, "");
+  const trimmedValue = value.trim().replace(/\/$/, "");
 
   if (
-    base.startsWith("/") ||
-    /localhost|127\.0\.0\.1/i.test(base) ||
-    base.includes("your-backend-domain")
+    trimmedValue.startsWith("/") ||
+    /localhost|127\.0\.0\.1/i.test(trimmedValue) ||
+    trimmedValue.includes("your-backend-domain")
   ) {
     return null;
   }
 
-  return base;
+  try {
+    const parsed = new URL(trimmedValue);
+    const currentProto = request.headers.get("x-forwarded-proto") ?? "https";
+    const currentHost = request.headers.get("host");
+
+    if (currentHost && `${parsed.protocol}//${parsed.host}` === `${currentProto}://${currentHost}`) {
+      return null;
+    }
+
+    return parsed.toString().replace(/\/$/, "");
+  } catch {
+    return null;
+  }
 }
 
-async function forwardToBackend(payload: ContactPayload) {
-  const base = getForwardApiBase();
+async function forwardToBackend(payload: ContactPayload, request: NextRequest) {
+  const base = getForwardApiBase(request);
 
   if (!base) {
     return null;
@@ -133,7 +150,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const forwarded = await forwardToBackend(parsed.payload);
+  const forwarded = await forwardToBackend(parsed.payload, request);
 
   if (forwarded?.success) {
     return json(forwarded, 201);
