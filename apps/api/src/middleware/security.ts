@@ -11,14 +11,17 @@ export function applySecurity(app: Express) {
   app.use(helmet());
   app.use(compression());
   app.use(cookieParser());
+  
+  // Humne origin ko '*' kar diya hai taake har domain allow ho jaye
   app.use(
     cors({
-      origin: env.CLIENT_URL,
+      origin: "*",
       credentials: true,
       methods: ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
       allowedHeaders: ["Content-Type", "Authorization"]
     })
   );
+  
   app.use(
     rateLimit({
       windowMs: env.RATE_LIMIT_WINDOW_MS,
